@@ -51,5 +51,21 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()
+        _seed_admin_user(app)
 
     return app
+
+
+def _seed_admin_user(app: Flask) -> None:
+    """Create the initial admin user on first run if none exists."""
+    from .models import User
+    pw_hash = app.config.get("ADMIN_PASSWORD_HASH", "")
+    if not pw_hash:
+        return
+    if User.query.filter_by(role="admin").first():
+        return
+    username = app.config.get("ADMIN_USERNAME", "admin")
+    admin = User(username=username, role="admin", password_hash=pw_hash)
+    db.session.add(admin)
+    db.session.commit()
+    logger.info("Created initial admin user '%s'", username)

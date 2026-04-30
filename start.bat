@@ -40,7 +40,9 @@ REM ── 4. First-time configuration ─────────────�
 if not exist ".env" (
     %PYTHON% setup_env.py
     if errorlevel 1 ( pause & exit /b 1 )
-)
+    echo.
+    echo   Login at http://localhost:%PORT% with username: admin
+    echo.
 
 REM ── 5. Instance directory ─────────────────────────────────────────────────────
 if not exist "instance" mkdir instance

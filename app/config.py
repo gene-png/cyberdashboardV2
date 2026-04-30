@@ -37,6 +37,7 @@ class Config:
     SESSION_COOKIE_SAMESITE = "Lax"
 
     ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
     ADMIN_SESSION_TIMEOUT = 15 * 60  # 15 minutes
 
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")

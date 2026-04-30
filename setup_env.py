@@ -54,6 +54,7 @@ _db_url  = f"sqlite:///{_db_path}"
 
 with open(".env", "w") as f:
     f.write(f"FLASK_SECRET_KEY={secret}\n")
+    f.write(f"ADMIN_USERNAME=admin\n")
     f.write(f"ADMIN_PASSWORD_HASH={pw_hash}\n")
     f.write(f"ANTHROPIC_API_KEY={api_key}\n")
     f.write(f"DATABASE_URL={_db_url}\n")
@@ -61,6 +62,7 @@ with open(".env", "w") as f:
     f.write("FORCE_HTTPS=false\n")
 
 print(f"  [OK] Saved to .env  (secret_key={secret[:8]}...)")
+print(f"  Login username: admin")
 print()
 print("  To enable SharePoint upload, add these to .env:")
 print("    AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET")
