@@ -4,6 +4,8 @@ from flask import Flask, redirect, request
 from .extensions import db, login_manager, csrf, limiter
 from .config import Config
 
+logger = logging.getLogger(__name__)
+
 
 def _configure_logging(app: Flask) -> None:
     if not app.debug and not app.testing:
