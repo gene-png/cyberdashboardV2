@@ -38,50 +38,8 @@ echo   [OK] Dependencies ready
 
 REM ── 4. First-time configuration ───────────────────────────────────────────────
 if not exist ".env" (
-    echo.
-    echo ────────────────────────────────────────────────
-    echo   First-time setup
-    echo ────────────────────────────────────────────────
-    echo.
-    echo   You only need to do this once.
-    echo.
-
-    echo   Admin password (minimum 12 characters):
-    set /p ADMIN_PASS="  Password: "
-    echo.
-
-    echo   Anthropic API key (optional - press Enter to skip):
-    echo   Get one at https://console.anthropic.com
-    set /p ANTHROPIC_KEY="  API key: "
-    echo.
-
-    REM Write .env using Python (handles bcrypt hash special chars safely)
-    %PYTHON% -c "
-import sys, secrets
-from werkzeug.security import generate_password_hash
-
-password = sys.argv[1]
-api_key  = sys.argv[2]
-secret   = secrets.token_hex(32)
-pw_hash  = generate_password_hash(password)
-
-with open('.env', 'w') as f:
-    f.write(f'FLASK_SECRET_KEY={secret}\n')
-    f.write(f'ADMIN_PASSWORD_HASH={pw_hash}\n')
-    f.write(f'ANTHROPIC_API_KEY={api_key}\n')
-    f.write('DATABASE_URL=sqlite:///instance/assessments.db\n')
-    f.write('ANTHROPIC_MODEL=claude-sonnet-4-6\n')
-    f.write('FORCE_HTTPS=false\n')
-
-print(f'  [OK] Saved to .env (key={secret[:8]}...)')
-" "!ADMIN_PASS!" "!ANTHROPIC_KEY!"
-
-    echo.
-    echo   To enable SharePoint, add these to .env:
-    echo     AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET
-    echo     SHAREPOINT_SITE_ID, SHAREPOINT_DRIVE_ID
-    echo.
-    echo ────────────────────────────────────────────────
+    %PYTHON% setup_env.py
+    if errorlevel 1 ( pause & exit /b 1 )
 )
 
 REM ── 5. Instance directory ─────────────────────────────────────────────────────
