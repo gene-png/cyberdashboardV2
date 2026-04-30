@@ -1,10 +1,12 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
+
+# Load .env from the repo root using an absolute path so it is always found
+# regardless of the working directory when flask is invoked.
+load_dotenv(os.path.join(REPO_ROOT, ".env"))
 
 
 def _resolve_db_url(url: str) -> str:
@@ -31,12 +33,9 @@ class Config:
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600
 
-    # Secure cookie only over HTTPS — must be False for plain http:// access.
-    # Reads SESSION_COOKIE_SECURE from .env first, falls back to FORCE_HTTPS.
-    SESSION_COOKIE_SECURE = os.environ.get(
-        "SESSION_COOKIE_SECURE",
-        os.environ.get("FORCE_HTTPS", "false"),
-    ).lower() == "true"
+    # Secure cookie flag — False by default so HTTP (local/LAN) works.
+    # Set SESSION_COOKIE_SECURE=true in .env only when serving over HTTPS.
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
 
