@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}ZT Assessment Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
+  <script src="{{ url_for('static', filename='js/htmx.min.js') }}" defer></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a href="{{ url_for('dashboard.index') }}">ZT Assessment Dashboard</a>
+    </div>
+    <div class="navbar-links">
+      {% if current_user.is_authenticated %}
+        <span class="nav-user">{{ current_user.username }}</span>
+        {% if admin_unlocked is defined and admin_unlocked %}
+          <span class="badge badge-admin">Admin</span>
+          <span class="admin-timer" id="admin-timer" title="Admin session remaining"></span>
+        {% else %}
+          <a href="{{ url_for('auth.admin_unlock') }}" class="btn btn-sm btn-outline">Unlock Admin</a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm">Logout</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  {% if admin_unlocked is defined and admin_unlocked %}
+  <script>
+  // Admin session countdown — shows remaining time, warns at 3 min, redirects at 0
+  (function() {
+    var TIMEOUT_SEC = {{ config.get('ADMIN_SESSION_TIMEOUT', 900) }};
+    var unlockTime = {{ session.get('admin_unlocked_at', 'null') | tojson }};
+    if (!unlockTime) return;
+
+    var unlockMs = new Date(unlockTime).getTime();
+    var timerEl = document.getElementById('admin-timer');
+    if (!timerEl) return;
+
+    function tick() {
+      var remainSec = Math.round(TIMEOUT_SEC - (Date.now() - unlockMs) / 1000);
+      if (remainSec <= 0) {
+        timerEl.textContent = 'Admin expired';
+        timerEl.className = 'admin-timer admin-timer-expired';
+        return;
+      }
+      var m = Math.floor(remainSec / 60);
+      var s = remainSec % 60;
+      timerEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+      timerEl.className = remainSec <= 180 ? 'admin-timer admin-timer-warn' : 'admin-timer';
+      setTimeout(tick, 1000);
+    }
+    tick();
+  })();
+  </script>
+  {% endif %}
+</body>
+</html>

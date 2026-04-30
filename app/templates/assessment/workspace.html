@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Assessment — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<div class="workspace-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h3>{{ assessment.customer_org }}</h3>
+      <span class="badge badge-{{ assessment.status }}">{{ assessment.status | replace('_', ' ') | title }}</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}"
+         class="sidebar-link {% if request.endpoint == 'assessment.inventory' %}active{% endif %}">
+        Tool Inventory
+      </a>
+      {% for pillar in framework.pillars %}
+      <a href="{{ url_for('assessment.pillar', assessment_id=assessment.id, pillar_id=pillar.id) }}"
+         class="sidebar-link {% if request.endpoint == 'assessment.pillar' and request.view_args.pillar_id == pillar.id %}active{% endif %}">
+        {{ pillar.name }}
+      </a>
+      {% endfor %}
+      <a href="{{ url_for('assessment.submit', assessment_id=assessment.id) }}"
+         class="sidebar-link {% if request.endpoint == 'assessment.submit' %}active{% endif %}">
+        Submit for Review
+      </a>
+      {% if assessment.status == 'finalized' %}
+      <a href="{{ url_for('assessment.final_report', assessment_id=assessment.id) }}"
+         class="sidebar-link sidebar-link-highlight">
+        Final Report (Download)
+      </a>
+      {% endif %}
+    </nav>
+    {% if admin_unlocked %}
+    <div class="sidebar-admin">
+      <hr />
+      <a href="{{ url_for('admin.review', assessment_id=assessment.id) }}" class="btn btn-sm btn-outline">Admin Review</a>
+      <a href="{{ url_for('admin.export_customer', assessment_id=assessment.id) }}" class="btn btn-sm">Export Customer</a>
+      <a href="{{ url_for('admin.export_consultant', assessment_id=assessment.id) }}" class="btn btn-sm">Export Consultant</a>
+    </div>
+    {% endif %}
+  </aside>
+
+  <main class="workspace-main">
+    <div class="workspace-welcome">
+      <h1>Assessment Workspace</h1>
+      <p>Framework: <strong>{{ framework.name }}</strong></p>
+      <p>Use the left navigation to complete each section. Your progress is saved when you submit each pillar.</p>
+
+      <h3>Progress Overview</h3>
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Pillar</th>
+            <th>Activities</th>
+            <th>Answered</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pillar in framework.pillars %}
+          {% set pillar_responses = responses.values() | selectattr('pillar', 'equalto', pillar.id) | list %}
+          {% set answered = pillar_responses | selectattr('current_state_value') | list | length %}
+          <tr>
+            <td><a href="{{ url_for('assessment.pillar', assessment_id=assessment.id, pillar_id=pillar.id) }}">{{ pillar.name }}</a></td>
+            <td>{{ pillar.activities | length }}</td>
+            <td>{{ answered }} / {{ pillar.activities | length }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if assessment.is_editable_by_customer %}
+      <div class="card" style="margin-top:2rem;padding:1rem 1.5rem;max-width:560px;">
+        <h3 style="margin-bottom:0.25rem;">Sensitive Terms</h3>
+        <p style="color:#64748b;font-size:13px;margin-bottom:0.75rem;">
+          List any names, hostnames, or identifiers you want removed before AI processing.
+          One per line.
+        </p>
+        {% if user_terms %}
+        <ul style="font-size:13px;margin-bottom:0.75rem;padding-left:1.2rem;">
+          {% for t in user_terms %}<li>{{ t.term }} <code style="color:#64748b;">{{ t.replacement_token }}</code></li>{% endfor %}
+        </ul>
+        {% endif %}
+        <form method="POST" action="{{ url_for('assessment.add_sensitive_terms', assessment_id=assessment.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <textarea name="terms" rows="3" placeholder="Acme Corp&#10;db01.internal&#10;10.0.1.0/24"
+                    style="width:100%;font-size:13px;resize:vertical;" maxlength="4000"></textarea>
+          <button type="submit" class="btn btn-sm btn-primary" style="margin-top:0.4rem;">Save Terms</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

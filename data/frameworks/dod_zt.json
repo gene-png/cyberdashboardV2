@@ -1,0 +1,262 @@
+{
+  "id": "dod_zt",
+  "name": "DoD Zero Trust Reference Architecture",
+  "version": "2.0",
+  "maturity_states": ["not_met", "partial", "target", "advanced"],
+  "maturity_labels": {
+    "not_met": "Not Met",
+    "partial": "Partial",
+    "target": "Target",
+    "advanced": "Advanced"
+  },
+  "maturity_order": {"not_met": 0, "partial": 1, "target": 2, "advanced": 3},
+  "pillars": [
+    {
+      "id": "user",
+      "name": "User",
+      "weight": 0.20,
+      "activities": [
+        {
+          "id": "dod_zt.user.1.1",
+          "name": "User Authentication",
+          "description": "Implement multi-factor authentication (MFA) for all users accessing DoD resources.",
+          "intent": "Ensure only authenticated identities access resources by eliminating reliance on single-factor credentials."
+        },
+        {
+          "id": "dod_zt.user.1.2",
+          "name": "Privileged User Authentication",
+          "description": "Implement phishing-resistant MFA (e.g., FIDO2, PIV/CAC) for privileged accounts.",
+          "intent": "Reduce risk of credential theft for high-value accounts that have elevated access."
+        },
+        {
+          "id": "dod_zt.user.1.3",
+          "name": "Identity Stores",
+          "description": "Establish authoritative identity stores synchronized with personnel records.",
+          "intent": "Ensure identity lifecycle events (onboarding, offboarding, role changes) propagate consistently."
+        },
+        {
+          "id": "dod_zt.user.1.4",
+          "name": "Conditional Access",
+          "description": "Enforce conditional access policies based on user risk, device health, and behavioral signals.",
+          "intent": "Dynamically adjust access based on real-time risk context rather than static rules."
+        },
+        {
+          "id": "dod_zt.user.1.5",
+          "name": "Just-In-Time Privileged Access",
+          "description": "Implement just-in-time (JIT) provisioning for privileged access requests.",
+          "intent": "Minimize standing privileged access to reduce blast radius from compromised accounts."
+        }
+      ]
+    },
+    {
+      "id": "device",
+      "name": "Device",
+      "weight": 0.20,
+      "activities": [
+        {
+          "id": "dod_zt.device.2.1",
+          "name": "Device Inventory",
+          "description": "Maintain a comprehensive, continuously updated inventory of all devices.",
+          "intent": "Establish authoritative source of truth for all endpoints before applying policy."
+        },
+        {
+          "id": "dod_zt.device.2.2",
+          "name": "Device Health Validation",
+          "description": "Continuously validate device health, patch status, and configuration compliance before granting access.",
+          "intent": "Ensure compromised or misconfigured devices cannot pivot to protected resources."
+        },
+        {
+          "id": "dod_zt.device.2.3",
+          "name": "Endpoint Detection and Response",
+          "description": "Deploy EDR on all managed endpoints with centralized telemetry.",
+          "intent": "Detect and contain endpoint-based threats in near-real-time."
+        },
+        {
+          "id": "dod_zt.device.2.4",
+          "name": "Remote Access",
+          "description": "Implement Zero Trust Network Access (ZTNA) to replace legacy VPN for remote users.",
+          "intent": "Eliminate network-level implicit trust for remote connections."
+        },
+        {
+          "id": "dod_zt.device.2.5",
+          "name": "Mobile Device Management",
+          "description": "Enroll all mobile endpoints in MDM/UEM solution with enforced security baselines.",
+          "intent": "Extend device health and policy enforcement to mobile endpoints."
+        }
+      ]
+    },
+    {
+      "id": "network",
+      "name": "Network/Environment",
+      "weight": 0.15,
+      "activities": [
+        {
+          "id": "dod_zt.network.3.1",
+          "name": "Macro Segmentation",
+          "description": "Implement macro-level network segmentation separating enclaves, missions, and environments.",
+          "intent": "Limit lateral movement between broad organizational zones."
+        },
+        {
+          "id": "dod_zt.network.3.2",
+          "name": "Micro Segmentation",
+          "description": "Implement micro-segmentation to enforce workload-to-workload controls at the application layer.",
+          "intent": "Limit blast radius of a breach to the smallest possible network zone."
+        },
+        {
+          "id": "dod_zt.network.3.3",
+          "name": "Software Defined Networking",
+          "description": "Adopt SDN or overlay networking to enforce dynamic, policy-driven access.",
+          "intent": "Enable programmable enforcement of ZT policy across the network fabric."
+        },
+        {
+          "id": "dod_zt.network.3.4",
+          "name": "Encrypted Traffic",
+          "description": "Encrypt all traffic in transit, including east-west traffic within the enclave.",
+          "intent": "Remove implicit trust in network position by encrypting all data flows."
+        },
+        {
+          "id": "dod_zt.network.3.5",
+          "name": "DNS Security",
+          "description": "Implement DNS security controls including DNSSEC, DNS filtering, and logging.",
+          "intent": "Prevent DNS-based attacks and gain visibility into name resolution activity."
+        }
+      ]
+    },
+    {
+      "id": "application",
+      "name": "Application & Workload",
+      "weight": 0.15,
+      "activities": [
+        {
+          "id": "dod_zt.application.4.1",
+          "name": "Application Inventory",
+          "description": "Maintain authoritative inventory of all applications and their data flows.",
+          "intent": "Enable access policy to be tied to known, categorized applications."
+        },
+        {
+          "id": "dod_zt.application.4.2",
+          "name": "Application Access Policy",
+          "description": "Enforce application-layer access control tied to user identity, device health, and context.",
+          "intent": "Replace network-based access with identity and attribute-based application authorization."
+        },
+        {
+          "id": "dod_zt.application.4.3",
+          "name": "Secure Software Development",
+          "description": "Integrate security into the software development lifecycle (SSDLC).",
+          "intent": "Shift security left so vulnerabilities are caught before reaching production."
+        },
+        {
+          "id": "dod_zt.application.4.4",
+          "name": "Application Threat Protections",
+          "description": "Deploy WAF, RASP, and application-layer DDoS protection.",
+          "intent": "Protect exposed applications from exploitation of known and unknown vulnerabilities."
+        },
+        {
+          "id": "dod_zt.application.4.5",
+          "name": "Workload Authorization",
+          "description": "Implement workload identity and authorization for service-to-service communication.",
+          "intent": "Extend ZT principles to machine identities, not just human users."
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "name": "Data",
+      "weight": 0.15,
+      "activities": [
+        {
+          "id": "dod_zt.data.5.1",
+          "name": "Data Inventory and Classification",
+          "description": "Discover, catalog, and classify all data assets by sensitivity.",
+          "intent": "Access policy cannot protect what is unknown; classification drives policy."
+        },
+        {
+          "id": "dod_zt.data.5.2",
+          "name": "Data Access Control",
+          "description": "Enforce least-privilege data access based on user role, data classification, and context.",
+          "intent": "Limit data exposure to only what is needed for the current authorized task."
+        },
+        {
+          "id": "dod_zt.data.5.3",
+          "name": "Data Encryption at Rest",
+          "description": "Encrypt all sensitive data at rest using approved cryptographic standards.",
+          "intent": "Ensure stored data is unreadable if physical or logical storage is compromised."
+        },
+        {
+          "id": "dod_zt.data.5.4",
+          "name": "Data Loss Prevention",
+          "description": "Deploy DLP controls to detect and prevent unauthorized data exfiltration.",
+          "intent": "Catch data leakage attempts at egress points before data leaves the environment."
+        },
+        {
+          "id": "dod_zt.data.5.5",
+          "name": "Rights Management",
+          "description": "Apply Information Rights Management (IRM) to sensitive documents.",
+          "intent": "Enforce data-level controls that travel with the document outside the perimeter."
+        }
+      ]
+    },
+    {
+      "id": "analytics",
+      "name": "Visibility & Analytics",
+      "weight": 0.15,
+      "activities": [
+        {
+          "id": "dod_zt.analytics.6.1",
+          "name": "Log Aggregation",
+          "description": "Centralize logs from all pillars into a SIEM or data lake.",
+          "intent": "Enable correlation and threat hunting across the entire environment."
+        },
+        {
+          "id": "dod_zt.analytics.6.2",
+          "name": "UEBA",
+          "description": "Implement User and Entity Behavior Analytics to detect anomalies.",
+          "intent": "Surface subtle indicators of compromise that rule-based detection misses."
+        },
+        {
+          "id": "dod_zt.analytics.6.3",
+          "name": "Security Analytics and Orchestration",
+          "description": "Implement SOAR or automated playbooks for threat response.",
+          "intent": "Reduce dwell time by automating common triage and response actions."
+        },
+        {
+          "id": "dod_zt.analytics.6.4",
+          "name": "Continuous Monitoring",
+          "description": "Implement continuous monitoring of all ZT activities with automated alerting.",
+          "intent": "Detect deviations from policy in real time rather than through periodic audits."
+        }
+      ]
+    },
+    {
+      "id": "automation",
+      "name": "Automation & Orchestration",
+      "weight": 0.15,
+      "activities": [
+        {
+          "id": "dod_zt.automation.7.1",
+          "name": "Policy Automation",
+          "description": "Automate ZT policy creation, distribution, and enforcement through a policy engine.",
+          "intent": "Remove human latency from policy decisions to achieve real-time enforcement."
+        },
+        {
+          "id": "dod_zt.automation.7.2",
+          "name": "Identity Lifecycle Automation",
+          "description": "Automate joiner/mover/leaver processes tied to HR systems.",
+          "intent": "Eliminate manual provisioning errors and access accumulation over time."
+        },
+        {
+          "id": "dod_zt.automation.7.3",
+          "name": "Incident Response Automation",
+          "description": "Automate initial incident triage, isolation, and notification.",
+          "intent": "Reduce mean time to contain by removing human bottlenecks from initial response."
+        },
+        {
+          "id": "dod_zt.automation.7.4",
+          "name": "Configuration Management",
+          "description": "Enforce configuration compliance through automated drift detection and remediation.",
+          "intent": "Ensure the environment remains in its intended state without manual audit cycles."
+        }
+      ]
+    }
+  ]
+}

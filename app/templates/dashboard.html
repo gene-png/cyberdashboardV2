@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — ZT Assessment{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Assessments</h1>
+  {% if admin_unlocked %}
+    <a href="{{ url_for('dashboard.new_assessment') }}" class="btn btn-primary">+ New Assessment</a>
+  {% endif %}
+</div>
+
+{% if assessments %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Organization</th>
+        <th>Framework</th>
+        <th>Status</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in assessments %}
+      <tr>
+        <td><strong>{{ a.customer_org }}</strong></td>
+        <td>{{ a.framework | upper | replace('_', ' ') }}</td>
+        <td><span class="badge badge-{{ a.status }}">{{ a.status | replace('_', ' ') | title }}</span></td>
+        <td>{{ a.created_at.strftime('%Y-%m-%d') if a.created_at else '—' }}</td>
+        <td>
+          <a href="{{ url_for('assessment.workspace', assessment_id=a.id) }}" class="btn btn-sm">View</a>
+          {% if admin_unlocked %}
+            <a href="{{ url_for('admin.review', assessment_id=a.id) }}" class="btn btn-sm btn-outline">Admin Review</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="empty-state">No assessments yet.
+    {% if admin_unlocked %}
+      <a href="{{ url_for('dashboard.new_assessment') }}">Create the first one.</a>
+    {% else %}
+      <a href="{{ url_for('auth.admin_unlock') }}">Unlock admin mode</a> to create assessments.
+    {% endif %}
+  </p>
+{% endif %}
+{% endblock %}

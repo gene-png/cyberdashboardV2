@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}AI Findings — {{ assessment.customer_org }}{% endblock %}
+
+{% block content %}
+<!-- AI generation progress overlay -->
+<div id="ai-progress-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);
+     z-index:9000;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#fff;border-radius:8px;padding:2rem 2.5rem;text-align:center;max-width:320px;">
+    <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;">Generating AI Findings…</div>
+    <div style="color:#64748b;font-size:13px;">Elapsed: <span id="ai-elapsed">0</span>s</div>
+    <div style="color:#64748b;font-size:12px;margin-top:0.5rem;">This may take up to a minute.</div>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById('ai-progress-overlay');
+  var elapsed = document.getElementById('ai-elapsed');
+  var timer;
+
+  function startOverlay() {
+    overlay.style.display = 'flex';
+    var seconds = 0;
+    elapsed.textContent = '0';
+    timer = setInterval(function () { elapsed.textContent = ++seconds; }, 1000);
+  }
+
+  document.querySelectorAll('.ai-generate-btn').forEach(function (btn) {
+    btn.closest('form').addEventListener('submit', function () {
+      btn.disabled = true;
+      startOverlay();
+    });
+  });
+})();
+</script>
+<div class="page-header">
+  <div>
+    <h1>AI Findings: {{ assessment.customer_org }}</h1>
+    <p style="color:#64748b;margin-top:4px;">{{ gap_findings | length }} finding(s) generated</p>
+  </div>
+  <div class="action-group">
+    <a href="{{ url_for('admin.review', assessment_id=assessment.id) }}" class="btn btn-outline">Back to Review</a>
+    <form method="POST" action="{{ url_for('admin.generate', assessment_id=assessment.id) }}" style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn-primary ai-generate-btn"
+              onclick="return confirm('Regenerate ALL findings? This will overwrite existing guidance.')">
+        Regenerate All Findings
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if not gap_findings %}
+<div class="empty-state" style="padding:40px 0;text-align:center;">
+  <p>No findings yet.</p>
+  <form method="POST" action="{{ url_for('admin.generate', assessment_id=assessment.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit" class="btn btn-primary ai-generate-btn">Generate AI Findings</button>
+  </form>
+  <p style="margin-top:12px;color:#64748b;font-size:13px;">
+    This will call the Anthropic API for each gap in the assessment.
+    {% if not config.get('ANTHROPIC_API_KEY') %}
+    <strong>Note: ANTHROPIC_API_KEY is not set — placeholder guidance will be used.</strong>
+    {% endif %}
+  </p>
+</div>
+{% else %}
+
+{% set severity_order = {'critical': 0, 'high': 1, 'medium': 2, 'low': 3} %}
+{% set sorted_findings = gap_findings | sort(attribute='severity') %}
+
+{% for finding in gap_findings | sort(attribute='activity_id') %}
+{% set activity = activity_lookup.get(finding.activity_id, {}) %}
+<div class="finding-card {% if finding.is_stale %}finding-stale{% endif %}">
+  <div class="finding-header">
+    <div class="finding-meta">
+      <span class="badge badge-severity-{{ finding.severity }}">{{ finding.severity | title }}</span>
+      <span class="pillar-tag">{{ pillar_name_lookup.get(finding.activity_id, finding.pillar) }}</span>
+      <code class="activity-id">{{ finding.activity_id }}</code>
+      <strong>{{ activity.get('name', finding.activity_id) }}</strong>
+      {% if finding.is_stale %}
+      <span class="stale-badge">Stale — responses changed after generation</span>
+      {% endif %}
+    </div>
+    <div class="finding-actions">
+      <form method="POST"
+            action="{{ url_for('admin.regenerate', assessment_id=assessment.id, activity_id=finding.activity_id) }}"
+            style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-sm btn-outline">Regenerate</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="finding-body">
+    {% if finding.rehydrated_response %}
+    <pre class="guidance-text">{{ finding.rehydrated_response }}</pre>
+    {% else %}
+    <p class="empty-state">No guidance generated yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="finding-footer">
+    <small class="text-muted">
+      Generated: {{ finding.generated_at.strftime('%Y-%m-%d %H:%M UTC') if finding.generated_at else '—' }}
+    </small>
+  </div>
+</div>
+{% endfor %}
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Admin Unlock{% endblock %}
+{% block content %}
+<div class="auth-card">
+  <h2>Admin Mode</h2>
+  <p>Enter the admin password to unlock elevated privileges for 15 minutes.</p>
+  <form method="POST" action="{{ url_for('auth.admin_unlock') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="form-group">
+      <label for="admin_password">Admin Password</label>
+      <input type="password" id="admin_password" name="admin_password" required autofocus />
+    </div>
+    <button type="submit" class="btn btn-primary btn-block">Unlock</button>
+    <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline btn-block" style="margin-top:8px">Cancel</a>
+  </form>
+</div>
+{% endblock %}

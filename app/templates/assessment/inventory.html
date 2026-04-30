@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Tool Inventory — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<div class="workspace-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h3>{{ assessment.customer_org }}</h3>
+      <span class="badge badge-{{ assessment.status }}">{{ assessment.status | replace('_', ' ') | title }}</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}" class="sidebar-link active">Tool Inventory</a>
+      <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id) }}" class="sidebar-link">Overview</a>
+    </nav>
+  </aside>
+
+  <main class="workspace-main">
+    <h2>Tool Inventory</h2>
+    <p>List every security tool your organization currently has deployed. This grounds the AI recommendations later.</p>
+
+    {% if assessment.is_editable_by_customer or admin_unlocked %}
+    <form method="POST" action="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tool Name *</label>
+          <input type="text" name="name" required placeholder="e.g. Microsoft Defender for Endpoint" />
+        </div>
+        <div class="form-group">
+          <label>Vendor</label>
+          <input type="text" name="vendor" placeholder="e.g. Microsoft" />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" name="category" placeholder="e.g. EDR, SIEM, PAM" />
+        </div>
+        <div class="form-group form-group-wide">
+          <label>Notes</label>
+          <input type="text" name="notes" placeholder="Deployment scope, version, etc." />
+        </div>
+        <button type="submit" class="btn btn-primary">Add Tool</button>
+      </div>
+    </form>
+    {% endif %}
+
+    {% if tools %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tool Name</th>
+          <th>Vendor</th>
+          <th>Category</th>
+          <th>Notes</th>
+          {% if admin_unlocked %}<th>Mapping</th>{% endif %}
+          {% if assessment.is_editable_by_customer or admin_unlocked %}
+          <th></th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for tool in tools %}
+        <tr>
+          <td>{{ tool.name }}</td>
+          <td>{{ tool.vendor or '—' }}</td>
+          <td>{{ tool.category or '—' }}</td>
+          <td>{{ tool.notes or '—' }}</td>
+          {% if admin_unlocked %}
+          <td>
+            <a href="{{ url_for('admin.tool_mapping', assessment_id=assessment.id, tool_id=tool.id) }}"
+               class="btn btn-sm {{ 'btn-outline' if tool.mapping_status == 'pending_review' else '' }}">
+              {% if tool.mapping_status == 'active' %}
+                ✓ Mapped ({{ tool.activity_mappings | length }})
+              {% else %}
+                Review Mapping
+              {% endif %}
+            </a>
+          </td>
+          {% endif %}
+          {% if assessment.is_editable_by_customer or admin_unlocked %}
+          <td>
+            <form method="POST" action="{{ url_for('assessment.delete_tool', assessment_id=assessment.id, tool_id=tool.id) }}" style="display:inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+              <button type="submit" class="btn btn-sm btn-danger"
+                      onclick="return confirm('Remove this tool?')">Remove</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty-state">No tools added yet.</p>
+    {% endif %}
+
+    {% if admin_unlocked %}
+    <div style="margin-top:1rem;">
+      <a href="{{ url_for('admin.attack_coverage', assessment_id=assessment.id) }}" class="btn btn-sm btn-outline">
+        ATT&amp;CK Coverage Report
+      </a>
+    </div>
+    {% endif %}
+
+    <div class="action-row">
+      <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id, overview=1) }}" class="btn btn-outline">Back to Overview</a>
+    </div>
+  </main>
+</div>
+{% endblock %}

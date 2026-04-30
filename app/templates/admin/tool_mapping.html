@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Tool Mapping — {{ tool.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Activity Mapping: {{ tool.name }}</h1>
+  <div class="action-group">
+    <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}" class="btn btn-sm btn-outline">Back to Inventory</a>
+  </div>
+</div>
+
+{% if tool.mapping_status == 'active' %}
+<div class="alert alert-success" style="margin-bottom:1rem;">
+  Mappings finalized on {{ tool.mappings_finalized_at.strftime('%Y-%m-%d %H:%M UTC') if tool.mappings_finalized_at else '—' }}.
+  You can still update them below — changes will be logged.
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:1.5rem;padding:1rem 1.5rem;">
+  <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+    <div><strong>{{ tool.vendor or '—' }}</strong> · {{ tool.category or '—' }}</div>
+    <div>{{ tool.notes or '' }}</div>
+    <div style="margin-left:auto;">
+      <span id="ai-count-display">{{ ai_count }} AI suggestion{{ '' if ai_count == 1 else 's' }}</span>
+      &nbsp;·&nbsp;
+      <span id="mapped-count-display">
+        <span id="mapped-count">{{ mapped_count }}</span> mapped
+      </span>
+    </div>
+    <form method="POST"
+          action="{{ url_for('admin.tool_mapping_suggest', assessment_id=assessment.id, tool_id=tool.id) }}"
+          style="display:inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" class="btn btn-sm btn-outline"
+              onclick="return confirm('Re-run AI suggestions? This will replace existing AI suggestions but keep any admin-confirmed mappings.')">
+        Re-run AI Suggestions
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if not ai_suggestions and tool.mapping_status == 'pending_review' %}
+<div class="alert alert-warning" style="margin-bottom:1rem;">
+  No AI suggestions yet. Click "Re-run AI Suggestions" above to generate them, or map activities manually below.
+</div>
+{% endif %}
+
+<form method="POST"
+      action="{{ url_for('admin.tool_mapping_finalize', assessment_id=assessment.id, tool_id=tool.id) }}"
+      id="mapping-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  {% for pillar in framework.pillars %}
+  <div class="pillar-section" style="margin-bottom:1.5rem;">
+    <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.5rem;color:#003366;">
+      {{ pillar.name }}
+    </h3>
+    <div style="display:flex;flex-direction:column;gap:0.4rem;">
+      {% for activity in pillar.activities %}
+      {% set is_ai = activity.id in ai_suggestions %}
+      {% set is_confirmed = activity.id in confirmed_ids %}
+      {% set suggestion = ai_suggestions.get(activity.id) %}
+      <label style="display:flex;align-items:flex-start;gap:0.6rem;padding:0.4rem 0.6rem;border-radius:4px;
+                    background:{{ '#f0f7ff' if is_ai else '#f9f9f9' }};cursor:pointer;">
+        <input type="checkbox"
+               name="activity_ids"
+               value="{{ activity.id }}"
+               {% if is_confirmed or is_ai %}checked{% endif %}
+               onchange="updateMappedCount()"
+               style="margin-top:3px;flex-shrink:0;" />
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            <code style="font-size:11px;color:#64748b;">{{ activity.id }}</code>
+            <span>{{ activity.name }}</span>
+            {% if is_ai %}
+            <span style="font-size:11px;padding:1px 6px;border-radius:10px;
+                         background:#d1fae5;color:#065f46;">
+              AI{% if suggestion and suggestion.ai_confidence %} · {{ suggestion.ai_confidence }}{% endif %}
+            </span>
+            {% endif %}
+          </div>
+          {% if is_ai and suggestion and suggestion.ai_rationale %}
+          <details style="margin-top:2px;">
+            <summary style="font-size:12px;color:#64748b;cursor:pointer;list-style:none;">
+              ▸ AI rationale
+            </summary>
+            <p style="font-size:12px;color:#475569;margin:4px 0 0 0;">{{ suggestion.ai_rationale }}</p>
+          </details>
+          {% endif %}
+        </div>
+      </label>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="action-row sticky-bottom">
+    <button type="submit" class="btn btn-primary" id="finalize-btn" disabled>
+      Finalize Mappings
+    </button>
+    <span style="font-size:13px;color:#64748b;margin-left:0.5rem;">
+      <span id="submit-count">0</span> activities selected
+    </span>
+  </div>
+</form>
+
+<script>
+(function () {
+  function updateMappedCount() {
+    var checked = document.querySelectorAll('input[name="activity_ids"]:checked').length;
+    document.getElementById('mapped-count').textContent = checked;
+    document.getElementById('submit-count').textContent = checked;
+    document.getElementById('finalize-btn').disabled = checked === 0;
+  }
+  // Expose globally for onchange
+  window.updateMappedCount = updateMappedCount;
+  // Init on load
+  updateMappedCount();
+})();
+</script>
+{% endblock %}

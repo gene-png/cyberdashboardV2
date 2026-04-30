@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Sensitive Terms — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Sensitive Terms: {{ assessment.customer_org }}</h1>
+  <div class="action-group">
+    <a href="{{ url_for('admin.review', assessment_id=assessment.id) }}" class="btn btn-sm btn-outline">Back to Review</a>
+  </div>
+</div>
+
+<div class="card" style="max-width:600px; margin-bottom:1.5rem;">
+  <h3>Add New Term</h3>
+  <p class="text-muted">Add codenames, subsidiary names, hostnames, or other identifiers to scrub before AI processing.</p>
+  <form method="POST" action="{{ url_for('admin.sensitive_terms', assessment_id=assessment.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <input type="hidden" name="action" value="add" />
+    <div class="form-group" style="display:flex; gap:0.5rem;">
+      <input type="text" name="term" placeholder="e.g. Acme Corp, 10.0.1.0/24, db01.internal"
+             style="flex:1;" maxlength="500" required />
+      <button type="submit" class="btn btn-primary">Add Term</button>
+    </div>
+  </form>
+</div>
+
+<h3>Current Terms</h3>
+{% if terms %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Term</th>
+      <th>Token</th>
+      <th>Source</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in terms %}
+    <tr class="{{ 'text-muted' if not t.is_active else '' }}">
+      <td>{{ t.term }}</td>
+      <td><code>{{ t.replacement_token }}</code></td>
+      <td>{{ t.source | replace('_', ' ') | title }}</td>
+      <td>{{ 'Active' if t.is_active else 'Inactive' }}</td>
+      <td>
+        {% if t.is_active %}
+        <form method="POST" action="{{ url_for('admin.sensitive_terms', assessment_id=assessment.id) }}"
+              style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="action" value="deactivate" />
+          <input type="hidden" name="term_id" value="{{ t.id }}" />
+          <button type="submit" class="btn btn-sm btn-outline"
+                  onclick="return confirm('Deactivate this term?')">Deactivate</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted">No sensitive terms configured. Auto-seeding occurs when AI findings are generated.</p>
+{% endif %}
+{% endblock %}

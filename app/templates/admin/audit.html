@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Audit Log — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Audit Log: {{ assessment.customer_org }}</h1>
+  <div class="action-group">
+    <a href="{{ url_for('admin.review', assessment_id=assessment.id) }}" class="btn btn-sm btn-outline">Back to Review</a>
+  </div>
+</div>
+
+{% if logs %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Timestamp (UTC)</th>
+      <th>User</th>
+      <th>Action</th>
+      <th>Target Type</th>
+      <th>Target ID</th>
+      <th>Before</th>
+      <th>After</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for log in logs %}
+    <tr>
+      <td><small>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '—' }}</small></td>
+      <td>{{ user_map.get(log.user_id, log.user_id or '—') }}</td>
+      <td><code>{{ log.action }}</code></td>
+      <td>{{ log.target_type or '—' }}</td>
+      <td><small>{{ log.target_id or '—' }}</small></td>
+      <td><small>{{ log.before_value or '—' }}</small></td>
+      <td><small>{{ log.after_value or '—' }}</small></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted">No audit log entries for this assessment.</p>
+{% endif %}
+{% endblock %}

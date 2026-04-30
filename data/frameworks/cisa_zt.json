@@ -1,0 +1,152 @@
+{
+  "id": "cisa_zt",
+  "name": "CISA Zero Trust Maturity Model 2.0",
+  "version": "2.0",
+  "maturity_states": ["traditional", "initial", "advanced", "optimal"],
+  "maturity_labels": {
+    "traditional": "Traditional",
+    "initial": "Initial",
+    "advanced": "Advanced",
+    "optimal": "Optimal"
+  },
+  "maturity_order": {"traditional": 0, "initial": 1, "advanced": 2, "optimal": 3},
+  "pillars": [
+    {
+      "id": "identity",
+      "name": "Identity",
+      "weight": 0.20,
+      "activities": [
+        {
+          "id": "cisa_zt.identity.1.1",
+          "name": "Identity Governance",
+          "description": "Establish an enterprise identity governance program covering all user types.",
+          "intent": "Ensure identities are managed consistently and authoritatively across the organization."
+        },
+        {
+          "id": "cisa_zt.identity.1.2",
+          "name": "MFA",
+          "description": "Enforce MFA for all agency users, including remote and privileged users.",
+          "intent": "Reduce risk of credential-based attacks which remain the leading initial access vector."
+        },
+        {
+          "id": "cisa_zt.identity.1.3",
+          "name": "Identity Risk Scoring",
+          "description": "Continuously assess and score identity risk based on behavior, credential exposure, and context.",
+          "intent": "Enable adaptive access decisions driven by real-time identity risk posture."
+        },
+        {
+          "id": "cisa_zt.identity.1.4",
+          "name": "Privileged Access Management",
+          "description": "Implement PAM solution covering all privileged accounts with JIT access and session recording.",
+          "intent": "Reduce standing privilege and ensure accountability for high-risk access."
+        }
+      ]
+    },
+    {
+      "id": "devices",
+      "name": "Devices",
+      "weight": 0.20,
+      "activities": [
+        {
+          "id": "cisa_zt.devices.2.1",
+          "name": "Device Visibility",
+          "description": "Achieve full visibility into all agency-managed and unmanaged devices.",
+          "intent": "Cannot enforce policy on devices that are unknown to the organization."
+        },
+        {
+          "id": "cisa_zt.devices.2.2",
+          "name": "Device Compliance",
+          "description": "Define and enforce device compliance policies tied to security baselines.",
+          "intent": "Only compliant devices should be granted access to agency resources."
+        },
+        {
+          "id": "cisa_zt.devices.2.3",
+          "name": "Device Threat Detection",
+          "description": "Deploy endpoint detection capabilities on all managed devices.",
+          "intent": "Identify device-based threats before they pivot to broader network segments."
+        }
+      ]
+    },
+    {
+      "id": "networks",
+      "name": "Networks",
+      "weight": 0.20,
+      "activities": [
+        {
+          "id": "cisa_zt.networks.3.1",
+          "name": "Network Segmentation",
+          "description": "Implement macro and micro segmentation across the enterprise network.",
+          "intent": "Limit lateral movement by reducing implicit trust between network zones."
+        },
+        {
+          "id": "cisa_zt.networks.3.2",
+          "name": "Encrypted Communications",
+          "description": "Encrypt all traffic in transit including internal east-west flows.",
+          "intent": "Remove the assumption that internal network position implies trust."
+        },
+        {
+          "id": "cisa_zt.networks.3.3",
+          "name": "Network Access Control",
+          "description": "Implement dynamic, identity-aware network access policies.",
+          "intent": "Replace static firewall rules with context-driven access decisions."
+        }
+      ]
+    },
+    {
+      "id": "applications",
+      "name": "Applications & Workloads",
+      "weight": 0.20,
+      "activities": [
+        {
+          "id": "cisa_zt.applications.4.1",
+          "name": "Application Access Management",
+          "description": "Integrate applications with centralized identity provider for access control.",
+          "intent": "Enable consistent, policy-driven access control across all application surfaces."
+        },
+        {
+          "id": "cisa_zt.applications.4.2",
+          "name": "Application Security Testing",
+          "description": "Integrate SAST, DAST, and SCA into CI/CD pipelines.",
+          "intent": "Identify and remediate application vulnerabilities before they reach production."
+        },
+        {
+          "id": "cisa_zt.applications.4.3",
+          "name": "Workload Protection",
+          "description": "Implement CWPP/CSPM for cloud workload protection and posture management.",
+          "intent": "Extend ZT controls to cloud-native workloads and serverless functions."
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "name": "Data",
+      "weight": 0.20,
+      "activities": [
+        {
+          "id": "cisa_zt.data.5.1",
+          "name": "Data Classification",
+          "description": "Classify all agency data by sensitivity and apply handling requirements.",
+          "intent": "Data protection controls require knowing what data exists and its risk level."
+        },
+        {
+          "id": "cisa_zt.data.5.2",
+          "name": "Data Access Controls",
+          "description": "Enforce least-privilege data access with ABAC or PBAC.",
+          "intent": "Ensure users access only the minimum data required for their authorized tasks."
+        },
+        {
+          "id": "cisa_zt.data.5.3",
+          "name": "Data Encryption",
+          "description": "Encrypt sensitive data at rest and in transit using FIPS-approved algorithms.",
+          "intent": "Protect data confidentiality regardless of where data is stored or transmitted."
+        },
+        {
+          "id": "cisa_zt.data.5.4",
+          "name": "Data Loss Prevention",
+          "description": "Deploy DLP to monitor and prevent unauthorized data movement.",
+          "intent": "Detect exfiltration attempts and enforce data handling policies at egress."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}{{ pillar.name }} — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<div class="workspace-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h3>{{ assessment.customer_org }}</h3>
+      <span class="badge badge-{{ assessment.status }}">{{ assessment.status | replace('_', ' ') | title }}</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}" class="sidebar-link">Tool Inventory</a>
+      {% for p in framework.pillars %}
+      <a href="{{ url_for('assessment.pillar', assessment_id=assessment.id, pillar_id=p.id) }}"
+         class="sidebar-link {% if p.id == pillar.id %}active{% endif %}">
+        {{ p.name }}
+      </a>
+      {% endfor %}
+      <a href="{{ url_for('assessment.submit', assessment_id=assessment.id) }}" class="sidebar-link">Submit for Review</a>
+    </nav>
+  </aside>
+
+  <main class="workspace-main">
+    <div class="pillar-page-header">
+      <h2>{{ pillar.name }}</h2>
+      {% if can_edit %}
+      <span class="autosave-note">Changes save automatically</span>
+      {% endif %}
+    </div>
+
+    {% if not can_edit %}
+    <div class="alert alert-info">This assessment is under review and cannot be edited.</div>
+    {% endif %}
+
+    {% for activity in pillar.activities %}
+    {% set resp = responses.get(activity.id) %}
+    <div class="activity-card" id="card-{{ activity.id | replace('.', '-') }}">
+      <div class="activity-header">
+        <code class="activity-id">{{ activity.id }}</code>
+        <h3 class="activity-name">{{ activity.name }}</h3>
+        <span id="save-{{ activity.id | replace('.', '-') }}" class="save-slot"></span>
+      </div>
+      <p class="activity-desc">{{ activity.description }}</p>
+      <details class="activity-intent">
+        <summary>Intent</summary>
+        <p>{{ activity.intent }}</p>
+      </details>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Current State</label>
+          <select name="current"
+            {% if can_edit %}
+              hx-post="{{ url_for('htmx.save_response', assessment_id=assessment.id, activity_id=activity.id) }}"
+              hx-trigger="change"
+              hx-include="closest .activity-card"
+              hx-target="#save-{{ activity.id | replace('.', '-') }}"
+              hx-swap="innerHTML"
+            {% else %}
+              disabled
+            {% endif %}
+          >
+            <option value="">— Select —</option>
+            {% for state in framework.maturity_states %}
+            <option value="{{ state }}"
+              {% if resp and resp.current_state_value == state %}selected{% endif %}>
+              {{ framework.maturity_labels[state] }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Target State</label>
+          <select name="target"
+            {% if can_edit %}
+              hx-post="{{ url_for('htmx.save_response', assessment_id=assessment.id, activity_id=activity.id) }}"
+              hx-trigger="change"
+              hx-include="closest .activity-card"
+              hx-target="#save-{{ activity.id | replace('.', '-') }}"
+              hx-swap="innerHTML"
+            {% else %}
+              disabled
+            {% endif %}
+          >
+            <option value="">— Select —</option>
+            {% for state in framework.maturity_states %}
+            <option value="{{ state }}"
+              {% if resp and resp.target_state_value == state %}selected{% endif %}>
+              {{ framework.maturity_labels[state] }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Evidence / Notes</label>
+        <textarea name="notes" rows="3"
+          placeholder="Describe current controls, evidence, or context..."
+          {% if can_edit %}
+            hx-post="{{ url_for('htmx.save_response', assessment_id=assessment.id, activity_id=activity.id) }}"
+            hx-trigger="change delay:600ms"
+            hx-include="closest .activity-card"
+            hx-target="#save-{{ activity.id | replace('.', '-') }}"
+            hx-swap="innerHTML"
+          {% else %}
+            disabled
+          {% endif %}
+        >{{ resp.evidence_notes if resp and resp.evidence_notes else '' }}</textarea>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if can_edit %}
+    {# Fallback form for no-JS environments #}
+    <noscript>
+      <form method="POST" action="{{ url_for('assessment.pillar', assessment_id=assessment.id, pillar_id=pillar.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="action-row">
+          <button type="submit" class="btn btn-primary">Save All Responses</button>
+        </div>
+      </form>
+    </noscript>
+
+    <div class="action-row" style="justify-content:flex-end;">
+      <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id, overview=1) }}" class="btn btn-outline">Back to Overview</a>
+    </div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

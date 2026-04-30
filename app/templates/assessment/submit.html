@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Submit Assessment — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<div class="workspace-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h3>{{ assessment.customer_org }}</h3>
+      <span class="badge badge-{{ assessment.status }}">{{ assessment.status | replace('_', ' ') | title }}</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}" class="sidebar-link">Tool Inventory</a>
+      <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id) }}" class="sidebar-link">Overview</a>
+      <a href="{{ url_for('assessment.submit', assessment_id=assessment.id) }}" class="sidebar-link active">Submit for Review</a>
+    </nav>
+  </aside>
+
+  <main class="workspace-main">
+    <h2>Submit for Review</h2>
+
+    <div class="summary-box">
+      <p><strong>Activities answered:</strong> {{ answered }} of {{ total_activities }}</p>
+      {% if answered < total_activities %}
+      <p class="text-warning">{{ total_activities - answered }} activities have not been answered yet. You can still submit, but unanswered activities will not be included in gap analysis.</p>
+      {% else %}
+      <p class="text-success">All activities answered.</p>
+      {% endif %}
+    </div>
+
+    {% if assessment.status in ['draft', 'in_progress'] %}
+    <form method="POST" action="{{ url_for('assessment.submit', assessment_id=assessment.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <p>Once submitted, you will not be able to edit responses unless the admin reopens the assessment.</p>
+      <button type="submit" class="btn btn-primary">Submit for Review</button>
+      <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id) }}" class="btn btn-outline">Go Back</a>
+    </form>
+    {% elif assessment.status == 'awaiting_review' %}
+    <div class="alert alert-info">
+      Your assessment has been submitted and is awaiting review. You will be notified when it is finalized.
+    </div>
+    {% elif assessment.status == 'finalized' %}
+    <div class="alert alert-success">
+      Your assessment has been finalized.
+      <a href="{{ url_for('admin.export_customer', assessment_id=assessment.id) }}" class="btn btn-sm btn-primary">Download Report</a>
+    </div>
+    {% else %}
+    <div class="alert alert-info">Assessment status: {{ assessment.status | replace('_', ' ') | title }}</div>
+    {% endif %}
+  </main>
+</div>
+{% endblock %}

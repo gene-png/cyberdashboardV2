@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}ATT&CK Coverage Report — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>MITRE ATT&CK Coverage Report</h1>
+    <p style="color:#64748b;margin-top:4px;">{{ assessment.customer_org }}</p>
+  </div>
+  <div class="action-group">
+    <a href="{{ url_for('admin.review', assessment_id=assessment.id) }}" class="btn btn-sm btn-outline">Back to Review</a>
+  </div>
+</div>
+
+{% if not has_techniques %}
+<div class="alert alert-warning" style="margin-bottom:1rem;">
+  The MITRE ATT&CK technique database is empty.
+  Run <code>python scripts/seed_mitre.py</code> to load techniques before generating a report.
+</div>
+{% endif %}
+
+{% if pending_tools %}
+<div class="alert alert-warning" style="margin-bottom:1rem;">
+  <strong>{{ pending_tools | length }} tool(s) have unmapped activities</strong> and will be excluded from the report:
+  {% for t in pending_tools %}<em>{{ t.name }}</em>{% if not loop.last %}, {% endif %}{% endfor %}.
+  <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}">Finalize their mappings</a> to include them.
+</div>
+{% endif %}
+
+{% if recent_report %}
+<div class="alert alert-info" style="margin-bottom:1rem;">
+  A report was generated less than 24 hours ago ({{ recent_report.generated_at.strftime('%Y-%m-%d %H:%M UTC') }}).
+  Click <em>Generate New Report</em> only if tool mappings have changed since then.
+</div>
+{% endif %}
+
+<div class="card" style="padding:1rem 1.5rem;margin-bottom:1.5rem;max-width:600px;">
+  <h3 style="margin-bottom:0.5rem;">Generate New Report</h3>
+  <p style="color:#64748b;font-size:13px;margin-bottom:0.75rem;">
+    Analyzes {{ active_tools | length }} finalized tool(s) against the full MITRE ATT&CK Enterprise
+    dataset using AI. Results are cached per tool — unchanged tools will not trigger new API calls.
+  </p>
+  <form method="POST" action="{{ url_for('admin.attack_coverage_generate', assessment_id=assessment.id) }}"
+        id="generate-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <button type="submit"
+            class="btn btn-primary ai-generate-btn"
+            {% if not active_tools or not has_techniques %}disabled{% endif %}>
+      Generate ATT&CK Coverage Report
+    </button>
+    {% if not active_tools %}
+    <span style="font-size:13px;color:#64748b;margin-left:0.5rem;">No finalized tools yet.</span>
+    {% endif %}
+  </form>
+</div>
+
+{% if past_reports %}
+<h3>Past Reports</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Generated</th>
+      <th>Tools</th>
+      <th>Techniques</th>
+      <th>Covered</th>
+      <th>Coverage %</th>
+      <th>Model</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for report in past_reports %}
+    <tr>
+      <td>{{ report.generated_at.strftime('%Y-%m-%d %H:%M UTC') }}</td>
+      <td>{{ report.tool_count }}</td>
+      <td>{{ report.technique_count }}</td>
+      <td>{{ report.covered_count }}</td>
+      <td>
+        {% if report.technique_count %}
+        {{ "%.1f"|format(report.covered_count / report.technique_count * 100) }}%
+        {% else %}—{% endif %}
+      </td>
+      <td><small>{{ report.model_used }}</small></td>
+      <td>
+        <a href="{{ url_for('admin.attack_coverage_download', assessment_id=assessment.id, report_id=report.id) }}"
+           class="btn btn-sm btn-outline">Download</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty-state">No reports generated yet.</p>
+{% endif %}
+
+<!-- Reuse progress overlay from findings.html pattern -->
+<div id="ai-progress-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);
+     z-index:9000;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="background:#fff;border-radius:8px;padding:2rem 2.5rem;text-align:center;max-width:360px;">
+    <div style="font-size:1.1rem;font-weight:600;margin-bottom:0.5rem;">Generating ATT&CK Coverage Report…</div>
+    <div style="color:#64748b;font-size:13px;">Elapsed: <span id="ai-elapsed">0</span>s</div>
+    <div style="color:#64748b;font-size:12px;margin-top:0.5rem;">
+      Analyzing each tool against the full ATT&CK Enterprise dataset.
+      This may take 30–120 seconds depending on the number of tools.
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  var overlay = document.getElementById('ai-progress-overlay');
+  var elapsed = document.getElementById('ai-elapsed');
+  var form = document.getElementById('generate-form');
+  if (form) {
+    form.addEventListener('submit', function () {
+      overlay.style.display = 'flex';
+      var s = 0;
+      setInterval(function () { elapsed.textContent = ++s; }, 1000);
+    });
+  }
+})();
+</script>
+{% endblock %}
