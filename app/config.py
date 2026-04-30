@@ -7,10 +7,25 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
 
 
+def _resolve_db_url(url: str) -> str:
+    """Resolve a relative sqlite:/// URL against REPO_ROOT so it works regardless of CWD."""
+    prefix = "sqlite:///"
+    if not url.startswith(prefix):
+        return url
+    path = url[len(prefix):]
+    # Already absolute: drive letter (Windows) or leading slash (Unix)
+    if os.path.isabs(path) or (len(path) > 1 and path[1] == ":"):
+        return url
+    return prefix + os.path.join(REPO_ROOT, path).replace("\\", "/")
+
+
 class Config:
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-in-production")
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", f"sqlite:///{os.path.join(REPO_ROOT, 'instance', 'assessments.db')}"
+    SQLALCHEMY_DATABASE_URI = _resolve_db_url(
+        os.environ.get(
+            "DATABASE_URL",
+            f"sqlite:///{os.path.join(REPO_ROOT, 'instance', 'assessments.db').replace(chr(92), '/')}",
+        )
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True

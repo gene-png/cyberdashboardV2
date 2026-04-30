@@ -3,6 +3,7 @@ First-time .env setup helper — called by start.bat and start.sh.
 Uses getpass so the password is never echoed to the terminal.
 """
 import sys
+import os
 import secrets
 import getpass
 
@@ -45,11 +46,17 @@ print()
 secret  = secrets.token_hex(32)
 pw_hash = generate_password_hash(password)
 
+# Use an absolute path so SQLite works regardless of the working directory
+# when flask is later invoked.
+_here    = os.path.abspath(os.path.dirname(__file__))
+_db_path = os.path.join(_here, "instance", "assessments.db").replace("\\", "/")
+_db_url  = f"sqlite:///{_db_path}"
+
 with open(".env", "w") as f:
     f.write(f"FLASK_SECRET_KEY={secret}\n")
     f.write(f"ADMIN_PASSWORD_HASH={pw_hash}\n")
     f.write(f"ANTHROPIC_API_KEY={api_key}\n")
-    f.write("DATABASE_URL=sqlite:///instance/assessments.db\n")
+    f.write(f"DATABASE_URL={_db_url}\n")
     f.write("ANTHROPIC_MODEL=claude-sonnet-4-6\n")
     f.write("FORCE_HTTPS=false\n")
 
