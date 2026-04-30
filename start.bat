@@ -2,8 +2,11 @@
 setlocal enabledelayedexpansion
 REM ─────────────────────────────────────────────────────────────────────────────
 REM Zero Trust Maturity Assessment Dashboard — Windows Quick Start
-REM Run this from the repo root: start.bat
+REM Double-click or run from anywhere; the script changes to its own directory.
 REM ─────────────────────────────────────────────────────────────────────────────
+
+REM Always run from the folder that contains this script
+cd /d "%~dp0"
 
 set PYTHON=python
 set PORT=5000
@@ -37,13 +40,15 @@ pip install --quiet -r requirements.txt
 echo   [OK] Dependencies ready
 
 REM ── 4. First-time configuration ───────────────────────────────────────────────
-if not exist ".env" (
-    %PYTHON% setup_env.py
-    if errorlevel 1 ( pause & exit /b 1 )
-    echo.
-    echo   Login at http://localhost:%PORT% with username: admin
-    echo.
+if exist ".env" goto :launch
 
+%PYTHON% setup_env.py
+if errorlevel 1 ( pause & exit /b 1 )
+echo.
+echo   Login at http://localhost:%PORT% with username: admin
+echo.
+
+:launch
 REM ── 5. Instance directory ─────────────────────────────────────────────────────
 if not exist "instance" mkdir instance
 
