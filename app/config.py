@@ -31,8 +31,12 @@ class Config:
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600
 
-    # Secure cookie only over HTTPS — must be False for plain http://localhost
-    SESSION_COOKIE_SECURE = os.environ.get("FORCE_HTTPS", "false").lower() == "true"
+    # Secure cookie only over HTTPS — must be False for plain http:// access.
+    # Reads SESSION_COOKIE_SECURE from .env first, falls back to FORCE_HTTPS.
+    SESSION_COOKIE_SECURE = os.environ.get(
+        "SESSION_COOKIE_SECURE",
+        os.environ.get("FORCE_HTTPS", "false"),
+    ).lower() == "true"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
 

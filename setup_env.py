@@ -60,6 +60,7 @@ with open(".env", "w") as f:
     f.write(f"DATABASE_URL={_db_url}\n")
     f.write("ANTHROPIC_MODEL=claude-sonnet-4-6\n")
     f.write("FORCE_HTTPS=false\n")
+    f.write("SESSION_COOKIE_SECURE=false\n")
 
 print(f"  [OK] Saved to .env  (secret_key={secret[:8]}...)")
 print(f"  Login username: admin")
