@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Assessment — {{ assessment.customer_org }}{% endblock %}
 {% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dashboard.index') }}">Dashboard</a> /
+  <span>{{ assessment.customer_org }}</span>
+</nav>
 <div class="workspace-layout">
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -74,6 +78,14 @@
           List any names, hostnames, or identifiers you want removed before AI processing.
           One per line.
         </p>
+        {% if auto_terms %}
+        <details style="margin-bottom:0.75rem;">
+          <summary style="font-size:13px;cursor:pointer;color:#475569;">Auto-detected terms ({{ auto_terms | length }}) — click to view</summary>
+          <ul style="font-size:12px;color:#64748b;margin-top:0.4rem;padding-left:1.2rem;">
+            {% for t in auto_terms %}<li>{{ t.term }} → <code>{{ t.replacement_token }}</code></li>{% endfor %}
+          </ul>
+        </details>
+        {% endif %}
         {% if user_terms %}
         <ul style="font-size:13px;margin-bottom:0.75rem;padding-left:1.2rem;">
           {% for t in user_terms %}<li>{{ t.term }} <code style="color:#64748b;">{{ t.replacement_token }}</code></li>{% endfor %}

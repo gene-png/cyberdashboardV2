@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Zero Trust Assessment Dashboard{% endblock %}
+{% block content %}
+<div class="landing-page">
+  <div class="landing-hero">
+    <h1>Zero Trust Maturity Assessment</h1>
+    <p class="landing-subtitle">Assess your organisation's Zero Trust posture, identify gaps, and get AI-powered remediation guidance.</p>
+  </div>
+
+  <div class="landing-cards">
+    <div class="landing-card">
+      <h2>Start New Assessment</h2>
+      <p>Begin a Zero Trust maturity assessment for your organisation. You'll need your name, organisation name, and a password to save your progress.</p>
+      <a href="{{ url_for('auth.start_assessment') }}" class="btn btn-primary btn-lg">Start Assessment</a>
+    </div>
+
+    <div class="landing-card">
+      <h2>Resume Assessment</h2>
+      <p>Return to an assessment you already started. Use the name and password you set when you began.</p>
+      <a href="{{ url_for('auth.resume') }}" class="btn btn-outline btn-lg">Resume</a>
+    </div>
+
+    <div class="landing-card landing-card-admin">
+      <h2>Admin Login</h2>
+      <p>Access the admin portal to review, score, generate AI findings, and finalise assessments.</p>
+      <a href="{{ url_for('auth.login') }}" class="btn btn-outline btn-lg">Admin Login</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

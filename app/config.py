@@ -1,47 +1,28 @@
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
-
-# Load .env from the repo root using an absolute path so it is always found
-# regardless of the working directory when flask is invoked.
-load_dotenv(os.path.join(REPO_ROOT, ".env"))
-
-
-def _resolve_db_url(url: str) -> str:
-    """Resolve a relative sqlite:/// URL against REPO_ROOT so it works regardless of CWD."""
-    prefix = "sqlite:///"
-    if not url.startswith(prefix):
-        return url
-    path = url[len(prefix):]
-    # Already absolute: drive letter (Windows) or leading slash (Unix)
-    if os.path.isabs(path) or (len(path) > 1 and path[1] == ":"):
-        return url
-    return prefix + os.path.join(REPO_ROOT, path).replace("\\", "/")
 
 
 class Config:
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-in-production")
-    SQLALCHEMY_DATABASE_URI = _resolve_db_url(
-        os.environ.get(
-            "DATABASE_URL",
-            f"sqlite:///{os.path.join(REPO_ROOT, 'instance', 'assessments.db').replace(chr(92), '/')}",
-        )
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "DATABASE_URL", f"sqlite:///{os.path.join(REPO_ROOT, 'instance', 'assessments.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = 3600
 
-    # Secure cookie flag — False by default so HTTP (local/LAN) works.
-    # Set SESSION_COOKIE_SECURE=true in .env only when serving over HTTPS.
-    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
+    # Session cookie hardening (spec §11)
+    SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
 
     ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
-    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-    ADMIN_SESSION_TIMEOUT = 15 * 60  # 15 minutes
+    ADMIN_SESSION_TIMEOUT = 60 * 60  # 60 minutes
 
     ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
     ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
@@ -70,6 +51,9 @@ class Config:
     # Directory where generated ATT&CK coverage Excel reports are stored
     # Defaults to instance/reports/ (gitignored, not served as static)
     REPORTS_DIR = os.environ.get("REPORTS_DIR", os.path.join(REPO_ROOT, "instance", "reports"))
+
+    EVIDENCE_UPLOAD_DIR = os.environ.get("EVIDENCE_UPLOAD_DIR", os.path.join(REPO_ROOT, "instance", "evidence"))
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10 MB
 
 
 class TestingConfig(Config):

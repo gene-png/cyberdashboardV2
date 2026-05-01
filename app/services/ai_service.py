@@ -22,11 +22,13 @@ _INJECTION_PATTERNS = re.compile(
 )
 
 _SYSTEM_PROMPT = (
-    "You are a cybersecurity consultant specialising in Zero Trust architecture. "
-    "You provide concise, actionable remediation guidance for specific framework "
-    "maturity gaps. Keep responses under 250 words. Use plain language. Avoid "
-    "generic advice — every recommendation must be grounded in the specific gap "
-    "and the tools listed. "
+    "You are a senior cybersecurity consultant specialising in Zero Trust architecture. "
+    "Your role is to give specific, practical remediation guidance that helps an organisation "
+    "move from their current maturity level to their target level for a specific activity. "
+    "Guidance must be concrete and actionable — name specific technologies, configurations, "
+    "processes, or controls. Never say 'implement a solution' or 'consider improving'; "
+    "say exactly WHAT to do and HOW. Tailor every recommendation to the tools the "
+    "organisation already owns where possible. Keep the total response under 300 words. "
     "IMPORTANT: Any [TOKEN] strings in the user message (e.g. [ORG_1], [PERSON_2]) "
     "are privacy placeholders. Repeat them verbatim in your response — do not "
     "interpret, expand, or replace them. "
@@ -74,24 +76,28 @@ def build_prompt(
 
     tools_section = "\n".join(tool_lines) if tool_lines else "- (none listed)"
 
+    notes_line = f"\nEvidence / notes from organisation: {safe_notes}" if safe_notes else ""
+
     return (
         f"Framework: {framework_name}\n"
         f"Pillar: {pillar_name}\n"
         f"Activity: {activity['id']} — {activity['name']}\n"
-        f"Activity description: {activity['description']}\n"
-        f"Activity intent: {activity['intent']}\n"
-        f"Current state reported: {current_state_label}"
-        + (f" — {safe_notes}" if safe_notes else "") + "\n"
-        f"Target state desired: {target_state_label}\n"
-        f"Gap: {gap_label}\n"
-        f"\nTools the organization owns:\n{tools_section}\n"
-        f"\nTask: Provide remediation guidance for closing this gap. "
-        f"Structure your response as:\n"
-        f"1. What's missing (1-2 sentences)\n"
-        f"2. Two or three concrete options to close the gap\n"
-        f"3. Whether any tool listed above could be reconfigured to cover this "
-        f"— name the tool and the specific capability\n"
-        f"4. Estimated effort (low / medium / high)"
+        f"Description: {activity['description']}\n"
+        f"Intent: {activity['intent']}\n"
+        f"Current maturity: {current_state_label}\n"
+        f"Target maturity: {target_state_label}\n"
+        f"Gap: {gap_label}{notes_line}\n"
+        f"\nOrganisation's security tools:\n{tools_section}\n"
+        f"\nTask: Provide specific, actionable steps to close this maturity gap. "
+        f"Structure your response exactly as follows:\n\n"
+        f"**Gap summary** (1 sentence: what specific control or capability is missing at "
+        f"{current_state_label} that is required for {target_state_label})\n\n"
+        f"**Steps to reach {target_state_label}** (3-5 numbered steps, each naming a "
+        f"specific action, technology, configuration, or process — not generic advice)\n\n"
+        f"**Leverage existing tools** (look at the tools list above; if any can directly "
+        f"address this gap, name the tool and the exact feature or configuration to use; "
+        f"if none apply, say so briefly)\n\n"
+        f"**Effort estimate**: [Low | Medium | High] — one sentence explaining why"
     )
 
 

@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Tool Inventory — {{ assessment.customer_org }}{% endblock %}
 {% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dashboard.index') }}">Dashboard</a> /
+  <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id, overview=1) }}">{{ assessment.customer_org }}</a> /
+  <span>Tool Inventory</span>
+</nav>
 <div class="workspace-layout">
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -40,6 +45,23 @@
         <button type="submit" class="btn btn-primary">Add Tool</button>
       </div>
     </form>
+    {% endif %}
+
+    {% if assessment.is_editable_by_customer or admin_unlocked %}
+    <!-- AI Tool Import -->
+    <div class="card" style="margin-top:1.5rem;padding:1.25rem 1.5rem;">
+      <h3 style="margin-bottom:0.25rem;">Import Tools from File</h3>
+      <p style="color:#64748b;font-size:13px;margin-bottom:0.75rem;">
+        Upload any file (CSV, Excel, PDF, Word, text) — the AI will extract tool names, vendors, and suggest categories.
+        <a href="{{ url_for('assessment.tool_import_template', assessment_id=assessment.id) }}">Download CSV template</a>
+      </p>
+      <form method="POST" action="{{ url_for('assessment.import_tools', assessment_id=assessment.id) }}"
+            enctype="multipart/form-data" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="file" name="import_file" required style="flex:1;min-width:200px;" />
+        <button type="submit" class="btn btn-sm btn-primary">Parse with AI</button>
+      </form>
+    </div>
     {% endif %}
 
     {% if tools %}
@@ -90,6 +112,36 @@
     </table>
     {% else %}
     <p class="empty-state">No tools added yet.</p>
+    {% endif %}
+
+    {% if admin_unlocked and tools %}
+    <div style="margin-top:1rem;display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+      <form method="POST" action="{{ url_for('admin.bulk_map_tools', assessment_id=assessment.id) }}"
+            id="bulk-map-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-sm btn-primary" id="bulk-map-btn"
+                onclick="startBulkMap()">Map All Tools with AI</button>
+      </form>
+      <span id="bulk-map-status" style="font-size:13px;color:#64748b;display:none;"></span>
+    </div>
+    <script>
+    function startBulkMap() {
+      var btn = document.getElementById('bulk-map-btn');
+      var status = document.getElementById('bulk-map-status');
+      btn.disabled = true;
+      btn.textContent = 'Mapping…';
+      status.style.display = 'inline';
+      var elapsed = 0;
+      status.textContent = 'Running AI mapping (0s)…';
+      var interval = setInterval(function() {
+        elapsed++;
+        status.textContent = 'Running AI mapping (' + elapsed + 's)…';
+      }, 1000);
+      document.getElementById('bulk-map-form').addEventListener('submit', function() {
+        clearInterval(interval);
+      });
+    }
+    </script>
     {% endif %}
 
     {% if admin_unlocked %}

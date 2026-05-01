@@ -2,6 +2,12 @@
 {% block title %}AI Findings — {{ assessment.customer_org }}{% endblock %}
 
 {% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dashboard.index') }}">Dashboard</a> /
+  <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id, overview=1) }}">{{ assessment.customer_org }}</a> /
+  <a href="{{ url_for('admin.review', assessment_id=assessment.id) }}">Review</a> /
+  <span>AI Findings</span>
+</nav>
 <!-- AI generation progress overlay -->
 <div id="ai-progress-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);
      z-index:9000;align-items:center;justify-content:center;flex-direction:column;">

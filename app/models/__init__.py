@@ -13,10 +13,11 @@ from .mapping_change import MappingChange
 from .mitre_technique import MitreTechnique
 from .attack_coverage_run import AttackCoverageRun
 from .coverage_report import CoverageReport
+from .pillar_evidence import PillarEvidence
 
 __all__ = [
     "Assessment", "User", "ToolInventory", "Response",
     "AdminScore", "GapFinding", "SensitiveTerm", "AuditLog", "AICallLog",
     "ToolActivityMapping", "MappingSuggestionsLog", "MappingChange",
-    "MitreTechnique", "AttackCoverageRun", "CoverageReport",
+    "MitreTechnique", "AttackCoverageRun", "CoverageReport", "PillarEvidence",
 ]

@@ -52,6 +52,17 @@ echo.
 REM ── 5. Instance directory ─────────────────────────────────────────────────────
 if not exist "instance" mkdir instance
 
+REM ── 5b. Seed MITRE ATT&CK database if empty ──────────────────────────────────
+echo   Checking MITRE ATT&CK database...
+%PYTHON% -c "from app import create_app; from app.models import MitreTechnique; app=create_app(); ctx=app.app_context(); ctx.push(); count=MitreTechnique.query.count(); ctx.pop(); exit(0 if count>0 else 1)" >nul 2>&1
+if errorlevel 1 (
+    echo   Seeding MITRE ATT&CK techniques ^(first run only, requires internet^)...
+    %PYTHON% scripts/seed_mitre.py
+    echo   [OK] MITRE ATT^&CK database ready
+) else (
+    echo   [OK] MITRE ATT^&CK database ready
+)
+
 REM ── 6. Launch ─────────────────────────────────────────────────────────────────
 echo.
 echo   Starting on http://localhost:%PORT%

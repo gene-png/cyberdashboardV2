@@ -10,7 +10,7 @@
 <body>
   <nav class="navbar">
     <div class="navbar-brand">
-      <a href="{{ url_for('dashboard.index') }}">ZT Assessment Dashboard</a>
+      <a href="{{ url_for('dashboard.index') }}">ZT Assessment Dashboard</a> | <a href="{{ url_for('auth.landing') }}" style="font-weight:normal;font-size:13px;">Home</a>
     </div>
     <div class="navbar-links">
       {% if current_user.is_authenticated %}
@@ -36,6 +36,8 @@
         </div>
       {% endif %}
     {% endwith %}
+
+    {% block breadcrumb %}{% endblock %}
 
     {% block content %}{% endblock %}
   </div>

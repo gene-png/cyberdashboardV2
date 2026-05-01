@@ -47,6 +47,21 @@ fi
 # ── 5. Ensure instance directory exists ───────────────────────────────────────
 mkdir -p instance
 
+# ── 5b. Seed MITRE ATT&CK database if empty ──────────────────────────────────
+info "Checking MITRE ATT&CK database..."
+if "$PYTHON" -c "
+from app import create_app
+from app.models import MitreTechnique
+app = create_app()
+with app.app_context():
+    exit(0 if MitreTechnique.query.count() > 0 else 1)
+" 2>/dev/null; then
+  ok "MITRE ATT&CK database ready"
+else
+  info "Seeding MITRE ATT&CK techniques (first run only, requires internet)..."
+  "$PYTHON" scripts/seed_mitre.py && ok "MITRE ATT&CK database ready" || true
+fi
+
 # ── 6. Launch ─────────────────────────────────────────────────────────────────
 echo ""
 bold "  Zero Trust Assessment Dashboard"

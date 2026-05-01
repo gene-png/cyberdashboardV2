@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{ pillar.name }} — {{ assessment.customer_org }}{% endblock %}
 {% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dashboard.index') }}">Dashboard</a> /
+  <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id, overview=1) }}">{{ assessment.customer_org }}</a> /
+  <span>{{ pillar.name }}</span>
+</nav>
 <div class="workspace-layout">
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -109,6 +114,46 @@
       </div>
     </div>
     {% endfor %}
+
+    <!-- Evidence Upload -->
+    {% if can_edit %}
+    <div class="card" style="margin-top:2rem;padding:1.25rem 1.5rem;">
+      <h3 style="margin-bottom:0.25rem;">Evidence</h3>
+      <p style="color:#64748b;font-size:13px;margin-bottom:0.75rem;">
+        Upload documents, screenshots, or any machine-readable file. The AI will use this to suggest current maturity states. If no evidence or notes are provided, activities default to <strong>Initial</strong>.
+      </p>
+
+      {% if pillar_evidence %}
+      <ul class="evidence-list" style="font-size:13px;margin-bottom:0.75rem;padding-left:0;list-style:none;">
+        {% for ev in pillar_evidence %}
+        <li style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid #f1f5f9;">
+          <span>&#128206; {{ ev.original_filename }}</span>
+          <span style="color:#94a3b8;font-size:11px;">{{ ev.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</span>
+          <form method="POST" action="{{ url_for('assessment.delete_evidence', assessment_id=assessment.id, pillar_id=pillar.id, evidence_id=ev.id) }}" style="margin-left:auto;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Remove this file?')">Remove</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('assessment.upload_evidence', assessment_id=assessment.id, pillar_id=pillar.id) }}"
+            enctype="multipart/form-data" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="file" name="evidence_file" required style="flex:1;min-width:200px;" />
+        <button type="submit" class="btn btn-sm btn-primary">Upload</button>
+      </form>
+
+      {% if pillar_evidence %}
+      <form method="POST" action="{{ url_for('assessment.analyze_evidence', assessment_id=assessment.id, pillar_id=pillar.id) }}" style="margin-top:0.75rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="btn btn-sm btn-outline">Analyse Evidence with AI</button>
+        <span style="color:#64748b;font-size:12px;margin-left:0.5rem;">Suggests current states based on uploaded files</span>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
 
     {% if can_edit %}
     {# Fallback form for no-JS environments #}

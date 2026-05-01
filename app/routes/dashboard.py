@@ -7,7 +7,7 @@ from .auth import is_admin_unlocked
 dashboard_bp = Blueprint("dashboard", __name__)
 
 
-@dashboard_bp.route("/")
+@dashboard_bp.route("/dashboard")
 @login_required
 def index():
     if current_user.role == "customer":

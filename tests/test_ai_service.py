@@ -109,10 +109,10 @@ def test_build_prompt_includes_task_structure():
         evidence_notes=None,
         tools=[],
     )
-    assert "1. What's missing" in prompt
-    assert "2. Two or three concrete options" in prompt
-    assert "3. Whether any tool listed above" in prompt
-    assert "4. Estimated effort" in prompt
+    assert "Gap summary" in prompt
+    assert "Steps to reach" in prompt
+    assert "Leverage existing tools" in prompt
+    assert "Effort estimate" in prompt
 
 
 # ---- Prompt injection defense ----

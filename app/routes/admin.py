@@ -1,10 +1,13 @@
 import io
 import json
+import logging
 import os
 from datetime import datetime, timezone
 from flask import Blueprint, render_template, redirect, url_for, request, flash, abort, send_file, current_app
 from flask_login import login_required, current_user
 import bleach
+
+logger = logging.getLogger(__name__)
 from ..extensions import db, limiter
 from ..models import (
     Assessment, AdminScore, AuditLog, GapFinding, AICallLog, SensitiveTerm, User,
@@ -818,3 +821,73 @@ def attack_coverage_download(assessment_id, report_id):
         download_name=filename,
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
+
+@admin_bp.route("/assessments/<assessment_id>/inventory/map-all", methods=["POST"])
+def bulk_map_tools(assessment_id):
+    redir = _require_admin()
+    if redir:
+        return redir
+
+    assessment = db.session.get(Assessment, assessment_id)
+    if not assessment:
+        abort(404)
+
+    api_key = current_app.config.get("ANTHROPIC_API_KEY", "")
+    model = current_app.config.get("MAPPING_MODEL", current_app.config.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"))
+
+    tools = [t for t in assessment.tool_inventory if t.mapping_status != "active"]
+    if not tools:
+        flash("All tools already have active mappings.", "info")
+        return redirect(url_for("assessment.inventory", assessment_id=assessment_id))
+
+    if not api_key:
+        flash("ANTHROPIC_API_KEY not configured — cannot run AI mapping.", "warning")
+        return redirect(url_for("assessment.inventory", assessment_id=assessment_id))
+
+    framework = load_framework(assessment.framework)
+    mapped = 0
+    errors = []
+    for tool in tools:
+        try:
+            result = suggest_mappings(tool, framework, api_key, model)
+            if len(result) == 2:
+                suggestions, error = result
+            else:
+                suggestions, error = result[0], result[1]
+
+            log_entry = MappingSuggestionsLog(
+                tool_id=tool.id,
+                assessment_id=assessment_id,
+                request_payload="bulk_map",
+                response_payload=str(error or f"{len(suggestions)} suggestions"),
+                model_used=model,
+            )
+            db.session.add(log_entry)
+
+            if error:
+                errors.append(f"{tool.name}: {error}")
+            else:
+                ToolActivityMapping.query.filter_by(tool_id=tool.id, source="ai_suggested").delete()
+                for s in suggestions:
+                    mapping = ToolActivityMapping(
+                        tool_id=tool.id,
+                        activity_id=s["activity_id"],
+                        source="ai_suggested",
+                        ai_confidence=s.get("confidence"),
+                        ai_rationale=s.get("rationale"),
+                    )
+                    db.session.add(mapping)
+                mapped += 1
+
+            db.session.commit()
+        except Exception as exc:
+            errors.append(f"{tool.name}: {exc}")
+            logger.warning("Bulk map failed for tool %s: %s", tool.id, exc)
+
+    if errors:
+        flash(f"Mapped {mapped} tool(s). {len(errors)} error(s): {'; '.join(errors[:3])}", "warning")
+    else:
+        flash(f"AI mapping complete — {mapped} tool(s) queued for review.", "success")
+
+    return redirect(url_for("assessment.inventory", assessment_id=assessment_id))

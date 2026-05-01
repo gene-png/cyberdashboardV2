@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Review Imported Tools — {{ assessment.customer_org }}{% endblock %}
+{% block content %}
+<nav class="breadcrumb">
+  <a href="{{ url_for('dashboard.index') }}">Dashboard</a> /
+  <a href="{{ url_for('assessment.workspace', assessment_id=assessment.id, overview=1) }}">{{ assessment.customer_org }}</a> /
+  <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}">Tool Inventory</a> /
+  <span>Review Import</span>
+</nav>
+
+<div class="page-header" style="margin-bottom:1.5rem;">
+  <h2>Review AI-Extracted Tools</h2>
+  <p style="color:#64748b;">The AI found {{ candidates | length }} tool(s). Select the ones to add to your inventory.</p>
+</div>
+
+{% if candidates %}
+<form method="POST" action="{{ url_for('assessment.import_tools_review', assessment_id=assessment.id) }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  <div style="margin-bottom:1rem;">
+    <button type="button" onclick="toggleAll(true)" class="btn btn-sm btn-outline">Select All</button>
+    <button type="button" onclick="toggleAll(false)" class="btn btn-sm btn-outline">Deselect All</button>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th style="width:2rem;"><input type="checkbox" id="check-all" onchange="toggleAll(this.checked)" checked /></th>
+        <th>Tool Name</th>
+        <th>Vendor</th>
+        <th>Category</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tool in candidates %}
+      <tr>
+        <td><input type="checkbox" name="selected" value="{{ loop.index0 }}" checked /></td>
+        <td>{{ tool.name }}</td>
+        <td>{{ tool.vendor or '—' }}</td>
+        <td>{{ tool.category or '—' }}</td>
+        <td style="font-size:12px;color:#64748b;">{{ tool.notes or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div style="display:flex;gap:0.75rem;margin-top:1rem;">
+    <button type="submit" class="btn btn-primary">Add Selected Tools</button>
+    <a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}" class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+
+<script>
+function toggleAll(checked) {
+  document.querySelectorAll('input[name="selected"]').forEach(function(cb) { cb.checked = checked; });
+  document.getElementById('check-all').checked = checked;
+}
+</script>
+{% else %}
+<p>No tools were extracted from the file.</p>
+<a href="{{ url_for('assessment.inventory', assessment_id=assessment.id) }}" class="btn btn-outline">Back</a>
+{% endif %}
+{% endblock %}

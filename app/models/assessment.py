@@ -32,6 +32,7 @@ class Assessment(db.Model):
     sensitive_terms = db.relationship("SensitiveTerm", back_populates="assessment", cascade="all, delete-orphan")
     audit_logs = db.relationship("AuditLog", back_populates="assessment", cascade="all, delete-orphan")
     ai_call_logs = db.relationship("AICallLog", back_populates="assessment", cascade="all, delete-orphan")
+    pillar_evidence = db.relationship("PillarEvidence", back_populates="assessment", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Assessment {self.id} {self.customer_org}>"
