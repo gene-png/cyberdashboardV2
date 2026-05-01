@@ -335,12 +335,16 @@ a:hover { text-decoration: underline; }
 }
 
 .guidance-text {
-  white-space: pre-wrap;
   font-family: inherit;
   font-size: 14px;
   color: #334155;
-  line-height: 1.6;
-  margin: 0;
+  line-height: 1.7;
+}
+.guidance-text p {
+  margin: 0 0 0.75rem 0;
+}
+.guidance-text p:last-child {
+  margin-bottom: 0;
 }
 
 /* Severity badges */

@@ -97,9 +97,9 @@
     </div>
   </div>
 
-  <div class="finding-body">
+  <div class="finding-body guidance-text">
     {% if finding.rehydrated_response %}
-    <pre class="guidance-text">{{ finding.rehydrated_response }}</pre>
+    {{ finding.rehydrated_response | render_md | safe }}
     {% else %}
     <p class="empty-state">No guidance generated yet.</p>
     {% endif %}

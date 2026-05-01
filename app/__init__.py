@@ -1,4 +1,6 @@
 import os
+import re
+import html
 import logging
 from flask import Flask, redirect, request
 from .extensions import db, login_manager, csrf, limiter
@@ -48,6 +50,19 @@ def create_app(config_class=Config):
         def _redirect_http_to_https():
             if request.headers.get("X-Forwarded-Proto", "https") == "http":
                 return redirect(request.url.replace("http://", "https://", 1), code=301)
+
+    @app.template_filter("render_md")
+    def render_md(text):
+        """Convert the AI's basic markdown (bold, numbered lists, newlines) to safe HTML."""
+        if not text:
+            return ""
+        escaped = html.escape(text)
+        # bold
+        escaped = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
+        # paragraph breaks
+        parts = escaped.split("\n\n")
+        parts = [p.replace("\n", "<br>") for p in parts]
+        return "<p>" + "</p><p>".join(parts) + "</p>"
 
     with app.app_context():
         db.create_all()
