@@ -120,7 +120,7 @@
             id="bulk-map-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <button type="submit" class="btn btn-sm btn-primary" id="bulk-map-btn"
-                onclick="startBulkMap()">Map All Tools with AI</button>
+                onclick="startBulkMap()">Map Tools to ZT Activities (powers AI gap guidance)</button>
       </form>
       <span id="bulk-map-status" style="font-size:13px;color:#64748b;display:none;"></span>
     </div>
@@ -147,7 +147,7 @@
     {% if admin_unlocked %}
     <div style="margin-top:1rem;">
       <a href="{{ url_for('admin.attack_coverage', assessment_id=assessment.id) }}" class="btn btn-sm btn-outline">
-        ATT&amp;CK Coverage Report
+        ATT&amp;CK Threat Coverage Report (standalone deliverable)
       </a>
     </div>
     {% endif %}

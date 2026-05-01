@@ -41,6 +41,8 @@ def login():
             admin = User.query.filter_by(role="admin").first()
             if admin and admin.check_password(password):
                 login_user(admin)
+                # Grant admin unlock automatically on admin login
+                session["admin_unlocked_at"] = datetime.now(timezone.utc).isoformat()
                 return redirect(next_page or url_for("dashboard.index"))
             flash("Incorrect password.", "danger")
     return render_template("login.html")
@@ -54,9 +56,13 @@ def resume():
     if current_user.is_authenticated:
         return redirect(url_for("dashboard.index"))
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
+        username_raw = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        user = User.query.filter_by(username=username).first()
+        # Try direct username match first, then try transforming as a name
+        user = User.query.filter_by(username=username_raw).first()
+        if not user:
+            transformed = re.sub(r"[^a-zA-Z0-9_.-]", "_", username_raw)[:80].lower()
+            user = User.query.filter_by(username=transformed).first()
         if user and user.check_password(password):
             login_user(user)
             next_page = request.args.get("next")
@@ -116,7 +122,11 @@ def start_assessment():
             db.session.commit()
 
             login_user(user)
-            flash(f"Welcome! Your assessment for {org} is ready.", "success")
+            flash(
+                f"Welcome! Your assessment for {org} is ready. "
+                f"Your login name is: {username} — save this to return later.",
+                "success",
+            )
             return redirect(url_for("assessment.workspace", assessment_id=assessment.id))
 
         for err in errors:
