@@ -1,10 +1,10 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))
+
+load_dotenv(os.path.join(REPO_ROOT, ".env"))
 
 
 class Config:
@@ -17,7 +17,8 @@ class Config:
     WTF_CSRF_TIME_LIMIT = 3600
 
     # Session cookie hardening (spec §11)
-    SESSION_COOKIE_SECURE = True
+    # Must be False for plain HTTP (local); True only when served over HTTPS
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
 
